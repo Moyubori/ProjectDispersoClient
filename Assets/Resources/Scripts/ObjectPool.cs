@@ -3,7 +3,18 @@ using System.Collections;
 
 public class ObjectPool : MonoBehaviour {
 
+	public static ObjectPool instance;
+
 	public GameObject[] objectPrefabs;
+
+	void Awake(){
+		if (instance == null) {
+			instance = this;
+		} else if (instance != this) {
+			Destroy (gameObject);    
+		}
+		DontDestroyOnLoad (gameObject);
+	}
 
 	void Start(){
 		objectPrefabs = Resources.LoadAll<GameObject> ("Prefabs");
@@ -11,7 +22,7 @@ public class ObjectPool : MonoBehaviour {
 			Debug.LogError ("Prefabs not loaded into ObjectPool.");
 		}
 	}
-
+		
 	private GameObject FindPrefabOfType<T>(){
 		foreach(GameObject prefab in objectPrefabs){
 			if (prefab.GetComponent<T>() != null) {
@@ -20,8 +31,8 @@ public class ObjectPool : MonoBehaviour {
 		}
 		return null;
 	}
-
-	//seeks for existing inactive projectile instance or creates new one
+		
+	// seeks for existing inactive instance or creates a new one
 	public GameObject GetInstance<T>() {
 		foreach (GameObject child in transform) {
 			if (!child.activeSelf && child.GetComponent<T>() != null) {
@@ -32,7 +43,7 @@ public class ObjectPool : MonoBehaviour {
 		try{
 			GameObject prefab = FindPrefabOfType<T>();
 			GameObject newObject = Instantiate (prefab, transform);
-			newObject.name = prefab.name + "_" + InstancesOfTypeActive<T> () + 1;
+			newObject.name = prefab.name + "_" + InstancesOfTypeCreated<T> () + 1;
 			return newObject;
 		} catch (System.NullReferenceException e){
 			throw new UnityException ("Prefab of type " + typeof(T) + " not found.");
@@ -54,7 +65,7 @@ public class ObjectPool : MonoBehaviour {
 		return result;
 	}
 
-	// returns the instance of the prefab and sets it to given local position (relative to the center of the camera)
+	// returns the instance of the prefab and sets it to given local position (relative to position of the ObjectPool)
 	public GameObject GetInstanceRelative<T>(Vector3 position, Quaternion rotation){
 		GameObject result = GetInstance<T> ();
 		result.transform.localPosition = position;
@@ -79,10 +90,27 @@ public class ObjectPool : MonoBehaviour {
 		return counter;
 	}
 
+	// returns number of currently active objects of type T in the pool
 	public int InstancesOfTypeActive<T>(){
 		int counter = 0;
 		foreach (Transform child in transform) {
 			if (child.GetComponent<T> () != null && child.gameObject.activeSelf) {
+				counter++;
+			}
+		}
+		return counter;
+	}
+
+	// returns number of all objects in pool
+	public int InstancesCreated(){
+		return transform.childCount;
+	}
+
+	// returns number of all objects of type T in pool
+	public int InstancesOfTypeCreated<T>(){
+		int counter = 0;
+		foreach (Transform child in transform) {
+			if (child.GetComponent<T> () != null) {
 				counter++;
 			}
 		}

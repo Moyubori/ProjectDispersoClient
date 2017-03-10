@@ -28,20 +28,20 @@ public class ConnectButtonController : MonoBehaviour {
 	public void ButtonOnClick(){
 		string ip = ipInputField.text;
 		if (ipPattern.IsMatch (ip)) {
-			Server.SetIP (ip);
+			Server.instance.SetIP (ip);
 		} else {
 			Debug.LogError ("Incorrect IP.");
 			return;
 		}
 		try{
 			int port = Int32.Parse(portInputField.text);
-			Server.SetPort (port);
+			Server.instance.SetPort (port);
 		} catch (FormatException e){
 			Debug.LogError ("Entered Port is incorrect.");
 		}
 		string name = nameInputField.text;
-		Server.SetClientName (name);
-		Server.ConnectToServer ();
+		Server.instance.SetClientName (name);
+		Server.instance.ConnectToServer ();
 	}
 
 }
