@@ -105,7 +105,7 @@ public class Server : MonoBehaviour {
 	}
 
 	public bool IsConnectedToServer(){
-		return isConnected;
+		return clientSocket.Connected;
 	}
 
 	public List<Level.Wall> GetLevelData(){
