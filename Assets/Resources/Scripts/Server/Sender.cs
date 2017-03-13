@@ -12,12 +12,16 @@ public class Sender : MonoBehaviour {
 
 	private Queue<IMessage> messagesToSend = new Queue<IMessage>();
 
-	public Sender(Socket socket){
+	public void SetSocket(Socket socket){
 		clientSocket = socket;
 		tickrate = Server.tickrate;
 	}
 
 	public void Run(){
+		if (!clientSocket.Connected) {
+			Debug.LogError ("Socket not connected to a server");
+			return;
+		}
 		StartCoroutine (SendMessages ());
 	}
 
@@ -29,12 +33,12 @@ public class Sender : MonoBehaviour {
 		while (clientSocket.Connected) {
 			IMessage message;
 			if (messagesToSend.Count == 0) {
-				// create a ping message here
+				message = new CustomMessage("{\"type\":\"ping\"}");
 				messagesToSend.Enqueue(message);
 			}
 			while (messagesToSend.Count > 0) {
 				message = messagesToSend.Dequeue ();
-				clientSocket.BeginSend(message.ToByteArray, 0, message.Size(), SocketFlags.None, new System.AsyncCallback(SendCallback), null);
+				clientSocket.BeginSend(message.ToByteArray(), 0, message.Size(), SocketFlags.None, new System.AsyncCallback(SendCallback), null);
 			}
 			yield return new WaitForSeconds (1.0f / tickrate);
 		}

@@ -21,17 +21,8 @@ public class Level : MonoBehaviour {
 	private List<Wall> levelData;
 	private List<GameObject> levelObjects = new List<GameObject>();
 
-	void Start(){
-//		try{
-//			levelData = Server.instance.GetLevelData ();
-//			CreateLevel ();
-//		} catch (System.NullReferenceException e){
-//			Debug.LogError ("Couldn't load level data.");
-//		}
-	}
-
-	public void LoadLevel(){
-		levelData = Server.instance.GetLevelData ();
+	public void LoadLevel(List<Wall> levelData){
+		this.levelData = levelData;
 		CreateLevel ();
 	}
 

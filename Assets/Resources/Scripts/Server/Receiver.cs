@@ -8,21 +8,21 @@ using SimpleJSON;
 public class Receiver : MonoBehaviour {
 
 	private Socket clientSocket;
-	private int tickrate;
+	private int tickrate = Server.tickrate;
 
 	private const int bufferSize = 1024;
 	private byte[] buffer = new byte[bufferSize];
 
-	private Queue<JSONClass> savedMessages = new Queue<JSONClass> ();
+	private Queue savedMessages = new Queue ();
 
-	public Receiver(Socket socket){
+	public void SetSocket(Socket socket){
 		clientSocket = socket;
-		tickrate = Server.tickrate;
 	}
 
 	public void Run(){
 		if (!clientSocket.Connected) {
-			throw new System.Net.Sockets.SocketException ("Socket not connected to a server");
+			Debug.LogError ("Socket not connected to a server");
+			return;
 		}
 		clientSocket.BeginReceive(buffer, 0, bufferSize, SocketFlags.None, new System.AsyncCallback(ReceiveCallback), null);
 	}
@@ -31,12 +31,14 @@ public class Receiver : MonoBehaviour {
 		int bytesReceived = clientSocket.EndReceive (ar);
 		Debug.Log ("Received message: " + System.Text.Encoding.Default.GetString (buffer));
 		JSONClass message = JSON.Parse (System.Text.Encoding.Default.GetString (buffer)).AsObject;
-		savedMessages.Enqueue (message);
-		buffer = new byte[bufferSize];
-		clientSocket.BeginReceive(buffer, 0, bufferSize, SocketFlags.None, new System.AsyncCallback(ReceiveCallback), null);
+		lock (savedMessages.SyncRoot) {
+			savedMessages.Enqueue (message);
+			buffer = new byte[bufferSize];
+			clientSocket.BeginReceive (buffer, 0, bufferSize, SocketFlags.None, new System.AsyncCallback (ReceiveCallback), null);
+		}
 	}
 
-	public Queue<JSONClass> GetMessages(){
+	public Queue GetMessages(){
 		return savedMessages;
 	}
 

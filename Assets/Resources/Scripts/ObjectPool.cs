@@ -13,7 +13,7 @@ public class ObjectPool : MonoBehaviour {
 		} else if (instance != this) {
 			Destroy (gameObject);    
 		}
-		DontDestroyOnLoad (gameObject);
+		//DontDestroyOnLoad (gameObject);
 	}
 
 	void Start(){
@@ -34,10 +34,10 @@ public class ObjectPool : MonoBehaviour {
 		
 	// seeks for existing inactive instance or creates a new one
 	public GameObject GetInstance<T>() {
-		foreach (GameObject child in transform) {
-			if (!child.activeSelf && child.GetComponent<T>() != null) {
-				child.SetActive (true);
-				return child;
+		foreach (Transform child in transform) {
+			if (!child.gameObject.activeSelf && child.GetComponent<T>() != null) {
+				child.gameObject.SetActive (true);
+				return child.gameObject;
 			}
 		}
 		try{
