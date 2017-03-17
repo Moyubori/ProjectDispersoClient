@@ -71,6 +71,8 @@ public class Server : MonoBehaviour {
 
 				sender.EnqueueMessage (new CustomMessage("{\"type\":\"set_name\",\"name\":\"" + clientName + "\"}"));
 
+				StartCoroutine (SendPlayerStatus ());
+
 				StartCoroutine (HandleReceivedMessages ());
 			} else {
 				Debug.LogError ("Connection error.");
@@ -98,14 +100,26 @@ public class Server : MonoBehaviour {
 		clientSocket.EndConnect (ar);
 	}
 
-	private IEnumerator HandleReceivedMessages(){
-		Queue messagesToHandle = receiver.GetMessages();
+	private IEnumerator SendPlayerStatus(){
 		while (clientSocket.Connected) {
+			if (localPlayer != null) {
+				sender.EnqueueMessage (new MoveMessage (localPlayer.transform.position));
+			}
+			yield return new WaitForSeconds (1.0f / tickrate);
+		}
+		yield break;
+	}
+
+	private IEnumerator HandleReceivedMessages(){
+		Queue<JSONObject> messagesToHandle = receiver.GetMessages();
+		while (clientSocket.Connected) {
+			float timeStart = Time.time;
 			while (messagesToHandle.Count > 0) {
 				// handle messages here
-				JSONClass message = messagesToHandle.Dequeue() as JSONClass;
+				JSONObject message = messagesToHandle.Dequeue() as JSONObject;
+				string msgType = message ["type"];
 				Debug.Log("Handling message type: " + message["type"]);
-				switch (message ["type"]) {
+				switch (msgType) {
 				case "map":
 					MSG_map (message);
 					break;
@@ -116,7 +130,7 @@ public class Server : MonoBehaviour {
 					MSG_players (message);
 					break;
 				default:
-					Debug.LogError ("Message of unknown type.");
+					Debug.LogError ("Message of unknown type." + msgType);
 					break;
 				}
 			}
@@ -126,10 +140,10 @@ public class Server : MonoBehaviour {
 		yield break;
 	}
 
-	private void MSG_map(JSONClass message){
+	private void MSG_map(JSONObject message){
 		List<Level.Wall> levelData = new List<Level.Wall> ();
 		JSONArray wallsJSON = message["walls"].AsArray;
-		foreach (JSONClass wall in wallsJSON) {
+		foreach (JSONObject wall in wallsJSON) {
 			Vector2 startPoint = new Vector2 (wall ["x1"].AsFloat, wall ["y1"].AsFloat);
 			Vector2 endPoint = new Vector2 (wall ["x2"].AsFloat, wall ["y2"].AsFloat);
 			levelData.Add (new Level.Wall (startPoint, endPoint, wall ["width"].AsFloat));
@@ -137,7 +151,7 @@ public class Server : MonoBehaviour {
 		level.LoadLevel (levelData);
 	}
 
-	private void MSG_change_position(JSONClass message){
+	private void MSG_change_position(JSONObject message){
 		if (localPlayer == null) {
 			localPlayer = ObjectPool.instance.GetInstance<LocalPlayer> ().GetComponent<LocalPlayer>();
 			localPlayer.transform.position = new Vector3 (message ["x"].AsFloat, localPlayer.transform.position.y, message ["y"].AsFloat);
@@ -147,19 +161,18 @@ public class Server : MonoBehaviour {
 		}
 	}
 
-		private void MSG_players(JSONClass message){
+
+	private void MSG_players(JSONObject message){
 		JSONArray players = message ["players"].AsArray;
-		foreach (JSONClass player in players) {
+		foreach (JSONObject player in players) {
 			RemotePlayer playerInstance = remotePlayers.Find (x => x.name == player ["name"].ToString());
 			if (playerInstance == null) {
-				Debug.Log (player["name"].ToString());
 
 				playerInstance = ObjectPool.instance.GetInstance<RemotePlayer> ().GetComponent<RemotePlayer>();
 				playerInstance.SetName (player ["name"].ToString());
 				remotePlayers.Add (playerInstance);
 			}
-			playerInstance.transform.position = Vector3.Lerp(playerInstance.transform.position,new Vector3 (player ["x"].AsFloat - playerInstance.transform.position.x, 1, player ["y"].AsFloat - playerInstance.transform.position.z), 0.1f);
-			//playerInstance.transform.position = new Vector3 (player["x"].AsFloat, playerInstance.transform.position.y, player["y"].AsFloat);
+			playerInstance.SetPosition (new Vector3 (player["x"].AsFloat, playerInstance.transform.position.y, player["y"].AsFloat));
 		}
 	}
 

@@ -14,12 +14,11 @@ public abstract class Player : MonoBehaviour {
 		this.name = name;
 	}
 
-	public void SetPosition(Vector3 position){
-		
-	}
 
-	void Awake(){
+
+	protected void Awake(){
 		name = null;
 	}
+
 
 }

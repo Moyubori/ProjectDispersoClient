@@ -26,6 +26,7 @@ public class Sender : MonoBehaviour {
 	}
 
 	public void EnqueueMessage(IMessage message){
+		Debug.Log ("dostalem message");
 		messagesToSend.Enqueue (message);
 	}
 
