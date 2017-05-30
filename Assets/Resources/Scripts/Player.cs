@@ -7,10 +7,10 @@ public abstract class Player : MonoBehaviour {
 	public string name { get; protected set; }
 
 	public void SetName(string name){
-		if (this.name != null) {
-			Debug.LogError ("Name was already set.");
-			return;
-		}
+		//if (this.name != null) {
+		//	Debug.LogError ("Name was already set.");
+		//	return;
+		//}
 		this.name = name;
 	}
 
@@ -20,5 +20,6 @@ public abstract class Player : MonoBehaviour {
 		name = null;
 	}
 
+	public abstract void Kill ();
 
 }

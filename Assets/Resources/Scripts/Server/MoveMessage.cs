@@ -9,16 +9,17 @@ public class MoveMessage : IMessage {
 
 	private string message;
 
-	public MoveMessage(Vector3 playerPosition){
+	public MoveMessage(Vector3 playerPosition, float playerRotation){
 		this.playerPosition = playerPosition;
 
 		JSONObject messageJSON = new JSONObject ();
 		messageJSON ["type"] = "move";
 		messageJSON ["x"].AsDouble = playerPosition.x;
 		messageJSON ["y"].AsDouble = playerPosition.z;
+		messageJSON ["rotation"].AsDouble = playerRotation;
 
 		message = messageJSON.ToString ();
-		Debug.Log (message);
+		//Debug.Log (message);
 	}
 
 	public int Size(){

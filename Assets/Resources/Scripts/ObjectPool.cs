@@ -23,17 +23,19 @@ public class ObjectPool : MonoBehaviour {
 		}
 	}
 		
-	private GameObject FindPrefabOfType<T>(){
+	private GameObject FindPrefab<T>(string tag = null){
 		foreach(GameObject prefab in objectPrefabs){
 			if (prefab.GetComponent<T>() != null) {
-				return prefab;
+				if (tag == null || prefab.tag == tag) {
+					return prefab;
+				}
 			}
 		}
 		return null;
 	}
 		
 	// seeks for existing inactive instance or creates a new one
-	public GameObject GetInstance<T>() {
+	public GameObject GetInstance<T>(string tag = null) {
 		foreach (Transform child in transform) {
 			if (!child.gameObject.activeSelf && child.GetComponent<T>() != null) {
 				child.gameObject.SetActive (true);
@@ -41,42 +43,13 @@ public class ObjectPool : MonoBehaviour {
 			}
 		}
 		try{
-			GameObject prefab = FindPrefabOfType<T>();
+			GameObject prefab = FindPrefab<T>(tag);
 			GameObject newObject = Instantiate (prefab, transform);
 			newObject.name = prefab.name + "_" + InstancesOfTypeCreated<T> () + 1;
 			return newObject;
 		} catch (System.NullReferenceException e){
 			throw new UnityException ("Prefab of type " + typeof(T) + " not found.");
 		}
-	}
-
-
-	// returns the instance of the prefab and sets it to given (global) position and rotation
-	public GameObject GetInstance<T>(Vector3 position, Quaternion rotation){
-		GameObject result = GetInstance<T> ();
-		result.transform.position = position;
-		result.transform.rotation = rotation;
-		return result;
-	}
-
-	public GameObject GetInstance<T>(Vector3 position) {
-		GameObject result = GetInstance<T> ();
-		result.transform.position = position;
-		return result;
-	}
-
-	// returns the instance of the prefab and sets it to given local position (relative to position of the ObjectPool)
-	public GameObject GetInstanceRelative<T>(Vector3 position, Quaternion rotation){
-		GameObject result = GetInstance<T> ();
-		result.transform.localPosition = position;
-		result.transform.rotation = rotation;
-		return result;
-	}
-
-	public GameObject GetInstanceRelative<T>(Vector3 position) {
-		GameObject result = GetInstance<T> ();
-		result.transform.localPosition = position;
-		return result;
 	}
 
 	// returns number of currently active objects in the pool

@@ -26,7 +26,6 @@ public class Sender : MonoBehaviour {
 	}
 
 	public void EnqueueMessage(IMessage message){
-		Debug.Log ("dostalem message");
 		messagesToSend.Enqueue (message);
 	}
 
@@ -39,6 +38,7 @@ public class Sender : MonoBehaviour {
 			}
 			while (messagesToSend.Count > 0) {
 				message = messagesToSend.Dequeue ();
+				Debug.LogWarning (System.Text.Encoding.Default.GetString (message.ToByteArray()));
 				clientSocket.BeginSend(message.ToByteArray(), 0, message.Size(), SocketFlags.None, new System.AsyncCallback(SendCallback), null);
 			}
 			yield return new WaitForSeconds (1.0f / tickrate);

@@ -19,8 +19,8 @@ public class Server : MonoBehaviour {
 	private int port;
 	private Socket clientSocket;
 
-	private Sender sender;
-	private Receiver receiver;
+	public Sender sender { get; private set; }
+	public Receiver receiver { get; private set; }
 
 	private List<RemotePlayer> remotePlayers = new List<RemotePlayer>();
 	private LocalPlayer localPlayer;
@@ -103,7 +103,7 @@ public class Server : MonoBehaviour {
 	private IEnumerator SendPlayerStatus(){
 		while (clientSocket.Connected) {
 			if (localPlayer != null) {
-				sender.EnqueueMessage (new MoveMessage (localPlayer.transform.position));
+				sender.EnqueueMessage (new MoveMessage (localPlayer.transform.position, localPlayer.transform.rotation.eulerAngles.y));
 			}
 			yield return new WaitForSeconds (1.0f / tickrate);
 		}
@@ -128,6 +128,15 @@ public class Server : MonoBehaviour {
 					break;
 				case "players":
 					MSG_players (message);
+					break;
+				case "shot_fired":
+					MSG_shotFired (message);
+					break;
+				case "player_is_dead":
+					MSG_player_is_dead (message);
+					break;
+				case "player_respawn":
+					MSG_respawn_player (message);
 					break;
 				default:
 					Debug.LogError ("Message of unknown type." + msgType);
@@ -155,9 +164,11 @@ public class Server : MonoBehaviour {
 		if (localPlayer == null) {
 			localPlayer = ObjectPool.instance.GetInstance<LocalPlayer> ().GetComponent<LocalPlayer>();
 			localPlayer.transform.position = new Vector3 (message ["x"].AsFloat, localPlayer.transform.position.y, message ["y"].AsFloat);
+			localPlayer.transform.rotation = Quaternion.AngleAxis (message ["rotation"].AsFloat, Vector3.up);
 			localPlayer.transform.parent = null;
 		} else {
 			localPlayer.transform.position = new Vector3(message["x"].AsFloat, localPlayer.transform.position.y, message["y"].AsFloat);
+			localPlayer.transform.rotation = Quaternion.AngleAxis (message ["rotation"].AsFloat, Vector3.up);
 		}
 	}
 
@@ -165,15 +176,46 @@ public class Server : MonoBehaviour {
 	private void MSG_players(JSONObject message){
 		JSONArray players = message ["players"].AsArray;
 		foreach (JSONObject player in players) {
-			RemotePlayer playerInstance = remotePlayers.Find (x => x.name == player ["name"].ToString());
+			RemotePlayer playerInstance = remotePlayers.Find (x => x.name == player ["name"].AsString);
 			if (playerInstance == null) {
-
 				playerInstance = ObjectPool.instance.GetInstance<RemotePlayer> ().GetComponent<RemotePlayer>();
-				playerInstance.SetName (player ["name"].ToString());
+				playerInstance.SetName (player ["name"].AsString);
 				remotePlayers.Add (playerInstance);
 			}
 			playerInstance.SetPosition (new Vector3 (player["x"].AsFloat, playerInstance.transform.position.y, player["y"].AsFloat));
+			playerInstance.SetRotation (player ["rotation"].AsFloat);
 		}
+	}
+
+	private void MSG_shotFired(JSONObject message){
+		try{
+		RemotePlayer playerInstance = remotePlayers.Find (x => x.name == message ["player"].AsString);
+			playerInstance.GetComponent<RemoteWeaponController> ().Shoot ();
+		} catch(System.NullReferenceException e){
+			Debug.Log("exception");
+		}
+	}
+
+	private void MSG_player_is_dead(JSONObject message){
+		var player = remotePlayers.Find ((x) => x.name == message["name"].AsString);
+		if (player == null) {
+			if (localPlayer.name == message ["name"].AsString) {
+				localPlayer.Kill ();
+			} else {
+				Debug.LogError ("Couldn't find player to kill.");
+			}
+		} else {
+			player.Kill ();
+		}
+	}
+
+
+	private void MSG_respawn_player(JSONObject message){
+		localPlayer.Respawn (new Vector3(message["x"].AsFloat, 1.01f, message["y"].AsFloat));
+	}
+
+	void Update(){
+		remotePlayers.RemoveAll ((x) => x.isDead || !x.gameObject.activeSelf);
 	}
 
 }
