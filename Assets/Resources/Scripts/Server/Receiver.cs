@@ -31,7 +31,7 @@ public class Receiver : MonoBehaviour {
 
 	private void ReceiveCallback(System.IAsyncResult ar){
 		clientSocket.EndReceive (ar);
-		Debug.Log ("Received message: " + System.Text.Encoding.Default.GetString (buffer));
+		//Debug.Log ("Received message: " + System.Text.Encoding.Default.GetString (buffer));
 
 		ValidateData ();
 

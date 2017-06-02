@@ -1,11 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LocalPlayer : Player {
 
+	public Text healthUIText;
+
 	void Update(){
-		
+		if (transform.position.y != 1.01f) {
+			transform.position = new Vector3 (transform.position.x, 1.01f, transform.position.z);
+		}
+		healthUIText.text = "HP:" + health;
 	}
 
 	public void Respawn(Vector3 newPos){

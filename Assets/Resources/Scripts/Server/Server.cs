@@ -118,7 +118,7 @@ public class Server : MonoBehaviour {
 				// handle messages here
 				JSONObject message = messagesToHandle.Dequeue() as JSONObject;
 				string msgType = message ["type"];
-				Debug.Log("Handling message type: " + message["type"]);
+				//Debug.Log("Handling message type: " + message["type"]);
 				switch (msgType) {
 				case "map":
 					MSG_map (message);
@@ -175,16 +175,20 @@ public class Server : MonoBehaviour {
 
 	private void MSG_players(JSONObject message){
 		JSONArray players = message ["players"].AsArray;
+		List<RemotePlayer> remotePlayersCopy = new List<RemotePlayer> (remotePlayers);
 		foreach (JSONObject player in players) {
-			RemotePlayer playerInstance = remotePlayers.Find (x => x.name == player ["name"].AsString);
+			RemotePlayer playerInstance = remotePlayersCopy.Find (x => x.name == player ["name"].AsString);
 			if (playerInstance == null) {
 				playerInstance = ObjectPool.instance.GetInstance<RemotePlayer> ().GetComponent<RemotePlayer>();
 				playerInstance.SetName (player ["name"].AsString);
 				remotePlayers.Add (playerInstance);
 			}
+			remotePlayersCopy.Remove (playerInstance);
 			playerInstance.SetPosition (new Vector3 (player["x"].AsFloat, playerInstance.transform.position.y, player["y"].AsFloat));
+			playerInstance.SetHealth (player ["health"].AsInt);
 			playerInstance.SetRotation (player ["rotation"].AsFloat);
 		}
+		remotePlayersCopy.ForEach ((x) => x.Kill());
 	}
 
 	private void MSG_shotFired(JSONObject message){

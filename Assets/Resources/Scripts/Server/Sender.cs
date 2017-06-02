@@ -38,7 +38,7 @@ public class Sender : MonoBehaviour {
 			}
 			while (messagesToSend.Count > 0) {
 				message = messagesToSend.Dequeue ();
-				Debug.LogWarning (System.Text.Encoding.Default.GetString (message.ToByteArray()));
+				//Debug.LogWarning (System.Text.Encoding.Default.GetString (message.ToByteArray()));
 				clientSocket.BeginSend(message.ToByteArray(), 0, message.Size(), SocketFlags.None, new System.AsyncCallback(SendCallback), null);
 			}
 			yield return new WaitForSeconds (1.0f / tickrate);
@@ -48,7 +48,7 @@ public class Sender : MonoBehaviour {
 
 	private void SendCallback(System.IAsyncResult ar){
 		int bytesSend = clientSocket.EndSend (ar);
-		Debug.Log (bytesSend + " bytes sent to server.");
+		//Debug.Log (bytesSend + " bytes sent to server.");
 	}
 
 }

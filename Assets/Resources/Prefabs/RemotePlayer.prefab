@@ -663,6 +663,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 102544080527743486}
+  bgSprite: {fileID: 212469149635348840}
 --- !u!114 &114626554181746578
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -674,6 +675,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf1a1ac149c84faea9327ecf6f563e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isDead: 0
 --- !u!120 &120710326333125802
 LineRenderer:
   m_ObjectHideFlags: 1
